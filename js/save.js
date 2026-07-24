@@ -1,8 +1,10 @@
 // Persistent state: everything here survives death, reload and every future run.
 import { mulberry32 } from './util.js';
-import { SURFACE_Y, STATION_X, WORLD_W } from './tiles.js';
+import { SURFACE_Y, WORLD_W } from './tiles.js';
+import { makeContract } from './content.js';
 
 export const SAVE_KEY = 'depthminer.save.v1';
+const VERSION = 2;
 
 const NAMES = ['Bex Harrow', 'Ilse Vantt', 'Old Mun', 'Corrin Ash', 'Dree Sallow', 'Marl Quint',
   'Tessaly Bore', 'Hobb Kerrick', 'Yun Aster', 'Petra Glim', 'Sig Underhalt', 'Wren Coalfoot',
@@ -30,8 +32,8 @@ const GEAR = ['a cracked lamp housing', 'a bent shortpick', 'an empty air canist
   'a rusted claim marker', 'a spare boot', 'a bundle of unlit torches', 'a folded, illegible map'];
 
 export function newSave(seed) {
-  return {
-    v: 1,
+  const s = {
+    v: VERSION,
     seed: seed >>> 0,
     edits: {},
     outposts: [],
@@ -39,8 +41,24 @@ export function newSave(seed) {
     ancientsSeeded: false,
     credits: 0,
     upgrades: { lamp: 1, efficiency: 1, pick: 1, tank: 1, armor: 1 },
-    stats: { runs: 0, deaths: 0, deepest: 0, playMs: 0, mined: 0, recovered: 0 },
+    items: { canister: 1, bomb: 2, flare: 3 },
+    relics: [],
+    contracts: [],
+    contractN: 0,
+    seenMobs: {},
+    seenZones: {},
+    notes: [],
+    stats: { runs: 0, deaths: 0, deepest: 0, playMs: 0, mined: 0, recovered: 0, kills: 0, caches: 0 },
   };
+  refreshContracts(s);
+  return s;
+}
+
+export function refreshContracts(save) {
+  const rnd = mulberry32((save.seed ^ 0x5bf03635) + save.contractN * 7919);
+  while (save.contracts.length < 3) {
+    save.contracts.push(makeContract(rnd, save.stats.deepest, 'c' + (save.contractN++)));
+  }
 }
 
 export function loadSave() {
@@ -48,13 +66,25 @@ export function loadSave() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
-    if (!s || s.v !== 1) return null;
-    // Defensive defaults in case an older/partial save shows up.
+    if (!s || !s.v) return null;
     s.edits = s.edits || {};
     s.outposts = s.outposts || [];
     s.remains = s.remains || [];
+    s.relics = s.relics || [];
+    s.contracts = s.contracts || [];
+    s.notes = s.notes || [];
+    s.seenMobs = s.seenMobs || {};
+    s.seenZones = s.seenZones || {};
+    s.contractN = s.contractN || 0;
+    s.items = Object.assign({ canister: 1, bomb: 2, flare: 3 }, s.items);
+    if (s.canisters !== undefined) { s.items.canister = s.canisters; delete s.canisters; }
     s.upgrades = Object.assign({ lamp: 1, efficiency: 1, pick: 1, tank: 1, armor: 1 }, s.upgrades);
-    s.stats = Object.assign({ runs: 0, deaths: 0, deepest: 0, playMs: 0, mined: 0, recovered: 0 }, s.stats);
+    s.stats = Object.assign(
+      { runs: 0, deaths: 0, deepest: 0, playMs: 0, mined: 0, recovered: 0, kills: 0, caches: 0 },
+      s.stats,
+    );
+    s.v = VERSION;
+    refreshContracts(s);
     return s;
   } catch (e) {
     console.warn('save load failed', e);
@@ -80,7 +110,7 @@ export function wipeSave() {
 export function seedAncients(world, save) {
   if (save.ancientsSeeded) return;
   const rnd = mulberry32(save.seed ^ 0x9e3779b9);
-  const count = 22;
+  const count = 26;
   for (let i = 0; i < count; i++) {
     const depth = Math.floor(18 + Math.pow(rnd(), 1.35) * 600);
     const x = Math.floor(12 + rnd() * (WORLD_W - 24));
@@ -108,6 +138,4 @@ export function seedAncients(world, save) {
   save.ancientsSeeded = true;
 }
 
-export function stationSpawn() {
-  return { x: STATION_X, y: SURFACE_Y - 1 };
-}
+export { EPITAPHS as DEATH_EPITAPHS };

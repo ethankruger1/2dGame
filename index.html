@@ -20,22 +20,26 @@
         <div class="bar"><i id="bar-fuel" class="fill fuel"></i></div><span id="txt-fuel" class="bar-num">100</span></div>
       <div class="bar-row" id="row-o2"><span class="bar-label">O₂</span>
         <div class="bar"><i id="bar-o2" class="fill o2"></i></div><span id="txt-o2" class="bar-num">100</span></div>
+      <div class="carry" id="carry">satchel empty</div>
     </div>
 
     <div class="hud-right">
       <div id="depth" class="depth">0 m</div>
       <div id="zone" class="zone">SURFACE</div>
       <div id="credits" class="credits">◈ 0</div>
-      <div id="carry" class="carry">carrying nothing</div>
     </div>
+
+    <canvas id="gauge" class="gauge"></canvas>
 
     <div id="log"></div>
 
     <div id="hotbar">
       <div class="slot" data-slot="0"><b>1</b><span>Platform</span><em>1 stone</em></div>
       <div class="slot" data-slot="1"><b>2</b><span>Ladder</span><em>1 stone</em></div>
-      <div class="slot" data-slot="2"><b>3</b><span>Torch</span><em>2 stone · 6 fuel</em></div>
-      <div class="slot" data-slot="3"><b>4</b><span>Outpost</span><em>30 stone · 12 iron</em></div>
+      <div class="slot" data-slot="2"><b>3</b><span>Torch</span><em>2 stone</em></div>
+      <div class="slot" data-slot="3"><b>4</b><span>Outpost</span><em>30 · 12</em></div>
+      <div class="slot" data-slot="4"><b>5</b><span>Charge</span><em>×0</em></div>
+      <div class="slot" data-slot="5"><b>6</b><span>Flare</span><em>×0</em></div>
     </div>
 
     <div id="prompt" class="prompt hidden"></div>
@@ -54,7 +58,8 @@
     <div class="sheet dead">
       <h2>You did not come back up.</h2>
       <p id="death-text"></p>
-      <p class="dim">Your remains and everything you were carrying are still down there. Go and get them.</p>
+      <p class="dim">Your remains and everything you were carrying are still down there,
+      exactly where you fell. Go and get them.</p>
       <button id="death-btn">Respawn</button>
     </div>
   </div>
@@ -65,8 +70,8 @@
       <p class="tagline">The shaft remembers. So do the ones who didn't come up.</p>
       <div class="keys">
         <div><kbd>A</kbd><kbd>D</kbd> move · <kbd>W</kbd>/<kbd>Space</kbd> jump · <kbd>S</kbd> descend ladder</div>
-        <div><b>Left click</b> mine &amp; strike · <b>Right click</b> build · <kbd>1</kbd>–<kbd>4</kbd> pick a build</div>
-        <div><kbd>E</kbd> use station / outpost · <kbd>Q</kbd> air canister · <kbd>H</kbd> help · <kbd>Esc</kbd> pause</div>
+        <div><b>Left click</b> mine &amp; strike · <b>Right click</b> use slot · <kbd>1</kbd>–<kbd>6</kbd> select</div>
+        <div><kbd>E</kbd> station, outpost, cache · <kbd>Q</kbd> air canister · <kbd>J</kbd> journal · <kbd>H</kbd> manual</div>
       </div>
       <div class="btnrow">
         <button id="btn-start">Descend</button>

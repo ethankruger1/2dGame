@@ -1,8 +1,11 @@
 // Procedural world: deterministic generation + a sparse map of persisted edits.
-import { fbm, hash2, clamp } from './util.js';
-import { T, TILES, ZONES, SURFACE_Y, WORLD_W, STATION_X, MAX_DEPTH, zoneAtY } from './tiles.js';
+import { fbm, hash2 } from './util.js';
+import { T, TILES, SURFACE_Y, WORLD_W, STATION_X, MAX_DEPTH, zoneAtY } from './tiles.js';
 
 const CACHE_LIMIT = 400000;
+const RUIN_CW = 48;  // ruin cell width in tiles
+const RUIN_CH = 44;  // ruin cell height in tiles
+const RUIN_H = 6;
 
 export class World {
   constructor(seed, edits) {
@@ -28,7 +31,7 @@ export class World {
     if (d <= 8) return SURFACE_Y;
     const n = fbm(x * 0.055, 0.5, this.seed + 3, 3);
     const rough = Math.round((n - 0.5) * 12);
-    const blend = clamp((d - 8) / 10, 0, 1);
+    const blend = Math.min(1, Math.max(0, (d - 8) / 10));
     return SURFACE_Y + Math.round(rough * blend);
   }
 
@@ -45,16 +48,44 @@ export class World {
     return t;
   }
 
-  setTile(x, y, id) {
-    this.edits[this.key(x, y)] = id;
-  }
-
-  // Reverts a tile to whatever the untouched world had there.
-  clearEdit(x, y) { delete this.edits[this.key(x, y)]; }
+  setTile(x, y, id) { this.edits[this.key(x, y)] = id; }
 
   isSolid(x, y) { return TILES[this.getTile(x, y)].solid; }
 
   isOpen(x, y) { return !TILES[this.getTile(x, y)].solid; }
+
+  isEdited(x, y) { return this.edits[this.key(x, y)] !== undefined; }
+
+  // --- abandoned camps ------------------------------------------------
+  // One per cell at most, always fully inside its cell so a single lookup
+  // is enough to know whether a tile belongs to a camp.
+  ruinAt(cx, cy) {
+    if (cy < 1) return null;
+    const h = hash2(cx, cy, this.seed + 101);
+    if (h > 0.6) return null;
+    const w = 9 + Math.floor(hash2(cx, cy, this.seed + 103) * 6);
+    const ox = cx * RUIN_CW + 4 + Math.floor(hash2(cx, cy, this.seed + 107) * 26);
+    const oy = cy * RUIN_CH + 6 + Math.floor(hash2(cx, cy, this.seed + 109) * 26);
+    return { ox, oy, w, h: RUIN_H };
+  }
+
+  ruinTile(x, y) {
+    const r = this.ruinAt(Math.floor(x / RUIN_CW), Math.floor(y / RUIN_CH));
+    if (!r) return -1;
+    const lx = x - r.ox, ly = y - r.oy;
+    if (lx < 0 || lx >= r.w || ly < 0 || ly >= r.h) return -1;
+    const deep = y - SURFACE_Y > 360;
+    const n = hash2(x, y, this.seed + 113);
+
+    if (ly === r.h - 1) return n < 0.14 ? T.AIR : T.PLATFORM;        // worn floor
+    if (ly === 0) return (lx === 0 || lx === r.w - 1) ? T.BEAM : T.AIR; // roof props
+    if (lx === 0 || lx === r.w - 1) return ly >= 2 ? T.BEAM : T.AIR;    // wall props
+    if (lx === 2 && ly === r.h - 2) return deep ? T.RELIC_PEDESTAL : T.CHEST;
+    if (lx === r.w - 2 && ly >= 1) return T.LADDER;
+    if (lx === 4 && ly === 1) return T.TORCH;
+    if (ly === r.h - 2 && n < 0.3) return T.RUBBLE;
+    return T.AIR;
+  }
 
   genTile(x, y) {
     if (x < 0 || x >= WORLD_W) return T.BEDROCK;
@@ -66,6 +97,9 @@ export class World {
     }
     if (y === surf) return T.GRASS;
     if (y < surf + 4) return T.DIRT;
+
+    const ruin = this.ruinTile(x, y);
+    if (ruin >= 0) return ruin;
 
     const depth = y - SURFACE_Y;
     const zone = zoneAtY(y);
@@ -88,6 +122,7 @@ export class World {
         if (this.solidAt(x, y + 1) && hash2(x, y, this.seed + 73) < 0.09) return T.GLOWCAP;
       }
       if (hash2(x, y, this.seed + 77) < 0.006) return T.FUEL_CRYSTAL;
+      if (zone.decor && this.solidAt(x, y + 1) && hash2(x, y, this.seed + 79) < 0.055) return zone.decor;
       return T.AIR;
     }
 
@@ -104,7 +139,8 @@ export class World {
     return zone.stone;
   }
 
-  // Solid test that never consults the cave carve of the caller (avoids recursion depth).
+  // Cave test used while generating, so decor can look at its neighbours
+  // without recursing back into genTile.
   solidAt(x, y) {
     if (x < 0 || x >= WORLD_W || y >= this.bottomY) return true;
     const surf = this.surfaceH(x);
@@ -127,4 +163,4 @@ export class World {
   }
 }
 
-export { SURFACE_Y, WORLD_W, STATION_X, MAX_DEPTH, ZONES };
+export { SURFACE_Y, WORLD_W, STATION_X, MAX_DEPTH };
