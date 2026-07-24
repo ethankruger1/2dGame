@@ -58,7 +58,9 @@ python3 -m http.server 8000
 
 ## Deploying
 
-`.github/workflows/pages.yml` publishes the repository root to GitHub Pages on every push. The site is entirely static — the whole game is the four files in `js/` plus `index.html` and `styles.css`.
+`.github/workflows/pages.yml` publishes the repository root to GitHub Pages on every push. The site is entirely static — the whole game is the five files in `js/` plus `index.html` and `styles.css`.
+
+Pages has to be switched on once by hand, because the workflow token is not allowed to create the Pages site: **Settings → Pages → Build and deployment → Source: GitHub Actions**. After that, every push deploys, and the game lives at `https://<user>.github.io/2dGame/`.
 
 ## Layout
 

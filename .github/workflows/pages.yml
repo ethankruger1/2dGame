@@ -1,5 +1,9 @@
 name: Deploy to GitHub Pages
 
+# Requires Pages to be switched on once, by hand:
+# Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+# The workflow token is not allowed to create the Pages site itself.
+
 on:
   push:
     branches:
@@ -17,17 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Kept separate from `deploy` so that Pages can be switched on here first —
-  # a job bound to the github-pages environment is rejected before it starts
-  # while Pages is still disabled on the repository.
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Enable and configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
