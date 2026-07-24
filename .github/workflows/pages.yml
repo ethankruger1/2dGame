@@ -17,14 +17,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # Kept separate from `deploy` so that Pages can be switched on here first —
+  # a job bound to the github-pages environment is rejected before it starts
+  # while Pages is still disabled on the repository.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Configure Pages
+      - name: Enable and configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
@@ -32,6 +32,14 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
