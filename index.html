@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Depth Miner</title>
+<meta name="description" content="Depth Miner — a caving game where every shaft you dig, every platform you build and every miner who dies down there stays in the world." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⛏️</text></svg>" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div class="hud-left">
+      <div class="bar-row"><span class="bar-label">HP</span>
+        <div class="bar"><i id="bar-hp" class="fill hp"></i></div><span id="txt-hp" class="bar-num">100</span></div>
+      <div class="bar-row"><span class="bar-label">FUEL</span>
+        <div class="bar"><i id="bar-fuel" class="fill fuel"></i></div><span id="txt-fuel" class="bar-num">100</span></div>
+      <div class="bar-row" id="row-o2"><span class="bar-label">O₂</span>
+        <div class="bar"><i id="bar-o2" class="fill o2"></i></div><span id="txt-o2" class="bar-num">100</span></div>
+    </div>
+
+    <div class="hud-right">
+      <div id="depth" class="depth">0 m</div>
+      <div id="zone" class="zone">SURFACE</div>
+      <div id="credits" class="credits">◈ 0</div>
+      <div id="carry" class="carry">carrying nothing</div>
+    </div>
+
+    <div id="log"></div>
+
+    <div id="hotbar">
+      <div class="slot" data-slot="0"><b>1</b><span>Platform</span><em>1 stone</em></div>
+      <div class="slot" data-slot="1"><b>2</b><span>Ladder</span><em>1 stone</em></div>
+      <div class="slot" data-slot="2"><b>3</b><span>Torch</span><em>2 stone · 6 fuel</em></div>
+      <div class="slot" data-slot="3"><b>4</b><span>Outpost</span><em>30 stone · 12 iron</em></div>
+    </div>
+
+    <div id="prompt" class="prompt hidden"></div>
+    <div id="alert" class="alert hidden"></div>
+  </div>
+
+  <div id="panel" class="overlay hidden">
+    <div class="sheet">
+      <h2 id="panel-title">Surface Station</h2>
+      <div id="panel-body"></div>
+      <button class="close" id="panel-close">Close [Esc]</button>
+    </div>
+  </div>
+
+  <div id="death" class="overlay hidden">
+    <div class="sheet dead">
+      <h2>You did not come back up.</h2>
+      <p id="death-text"></p>
+      <p class="dim">Your remains and everything you were carrying are still down there. Go and get them.</p>
+      <button id="death-btn">Respawn</button>
+    </div>
+  </div>
+
+  <div id="title" class="overlay">
+    <div class="sheet title-sheet">
+      <h1>DEPTH<span>MINER</span></h1>
+      <p class="tagline">The shaft remembers. So do the ones who didn't come up.</p>
+      <div class="keys">
+        <div><kbd>A</kbd><kbd>D</kbd> move · <kbd>W</kbd>/<kbd>Space</kbd> jump · <kbd>S</kbd> descend ladder</div>
+        <div><b>Left click</b> mine &amp; strike · <b>Right click</b> build · <kbd>1</kbd>–<kbd>4</kbd> pick a build</div>
+        <div><kbd>E</kbd> use station / outpost · <kbd>Q</kbd> air canister · <kbd>H</kbd> help · <kbd>Esc</kbd> pause</div>
+      </div>
+      <div class="btnrow">
+        <button id="btn-start">Descend</button>
+        <button id="btn-wipe" class="ghost">Collapse the mine (wipe save)</button>
+      </div>
+      <p id="title-stats" class="dim"></p>
+    </div>
+  </div>
+</div>
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
